@@ -212,8 +212,8 @@ svn co https://github.com/xiaorouji/openwrt-passwall/trunk/trojan-go package/new
 svn co https://github.com/xiaorouji/openwrt-passwall/trunk/brook package/new/brook
 svn co https://github.com/xiaorouji/openwrt-passwall/trunk/trojan-plus package/new/trojan-plus
 svn co https://github.com/xiaorouji/openwrt-passwall/trunk/ssocks package/new/ssocks
-#svn co https://github.com/xiaorouji/openwrt-passwall/trunk/xray-core package/new/xray-core
-svn co https://github.com/fw876/helloworld/trunk/xray-core package/new/xray-core
+svn co https://github.com/xiaorouji/openwrt-passwall/trunk/xray-core package/new/xray-core
+#svn co https://github.com/fw876/helloworld/trunk/xray-core package/new/xray-core
 svn co https://github.com/xiaorouji/openwrt-passwall/trunk/v2ray package/new/v2ray
 svn co https://github.com/xiaorouji/openwrt-passwall/trunk/v2ray-plugin package/new/v2ray-plugin
 svn co https://github.com/xiaorouji/openwrt-passwall/trunk/xray-plugin package/new/xray-plugin
@@ -246,7 +246,9 @@ sed -i 's,files/etc/config,$(PKG_BUILD_DIR)/package/openwrt/files/etc/config,g' 
 #上网APP过滤
 git clone -b master --depth 1 https://github.com/destan19/OpenAppFilter.git package/new/OpenAppFilter
 #Docker
-sed -i 's/+docker-ce/+docker \\\n\t+dockerd/g' ./feeds/luci/applications/luci-app-dockerman/Makefile
+#rm -rf ./feeds/luci/applications/luci-app-dockerman
+#git clone --depth=1 https://github.com/KFERMercer/luci-app-dockerman feeds/luci/applications/luci-app-dockerman
+sed -i 's/+docker/+docker \\\n\t+dockerd/g' ./feeds/luci/applications/luci-app-dockerman/Makefile
 #ipv6-helper
 svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/ipv6-helper package/lean/ipv6-helper
 #IPSEC
