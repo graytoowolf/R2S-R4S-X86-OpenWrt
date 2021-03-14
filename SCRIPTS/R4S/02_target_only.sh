@@ -6,18 +6,17 @@ rm -rf ./target/linux/rockchip
 svn co https://github.com/immortalwrt/immortalwrt/branches/master/target/linux/rockchip target/linux/rockchip
 rm -rf ./package/boot/uboot-rockchip
 svn co https://github.com/immortalwrt/immortalwrt/branches/master/package/boot/uboot-rockchip package/boot/uboot-rockchip
+svn co https://github.com/immortalwrt/immortalwrt/branches/master/package/boot/arm-trusted-firmware-rk3328 package/boot/arm-trusted-firmware-rk3328
 
 #overclock 1.8/2.2
 rm -rf ./target/linux/rockchip/patches-5.4/992-rockchip-rk3399-overclock-to-2.2-1.8-GHz-for-NanoPi4.patch
 cp -f ../PATCH/new/main/991-rockchip-rk3399-overclock-to-2.2-1.8-GHz-for-NanoPi4.patch ./target/linux/rockchip/patches-5.4/991-rockchip-rk3399-overclock-to-2.2-1.8-GHz-for-NanoPi4.patch
 cp -f ../PATCH/new/main/213-RK3399-set-critical-CPU-temperature-for-thermal-throttling.patch ./target/linux/rockchip/patches-5.4/213-RK3399-set-critical-CPU-temperature-for-thermal-throttling.patch
 
-#DMC（WIP）
-#cp -f ../PATCH/new/main/803-ARM64-dts-rk3399-add-dmc-and-dfi-node.patch.patch ./target/linux/rockchip/patches-5.4/803-ARM64-dts-rk3399-add-dmc-and-dfi-node.patch.patch
-
 #使用特定的优化
-sed -i 's,-mcpu=generic,-march=armv8-a+crypto+crc -mcpu=cortex-a72.cortex-a53+crypto+crc -mtune=cortex-a72.cortex-a53,g' include/target.mk
-
+sed -i 's,-mcpu=generic,-march=armv8-a+crypto+crc -mabi=lp64,g' include/target.mk
+cp -f ../PATCH/new/package/100-Implements-AES-and-GCM-with-ARMv8-Crypto-Extensions.patch ./package/libs/mbedtls/patches/100-Implements-AES-and-GCM-with-ARMv8-Crypto-Extensions.patch
+sed -i 's,kmod-r8169,kmod-r8168,g' target/linux/rockchip/image/armv8.mk
 #Experimental
 sed -i '/CRYPTO_DEV_ROCKCHIP/d' ./target/linux/rockchip/armv8/config-5.4
 sed -i '/HW_RANDOM_ROCKCHIP/d' ./target/linux/rockchip/armv8/config-5.4
@@ -26,37 +25,36 @@ CONFIG_CRYPTO_DEV_ROCKCHIP=y
 CONFIG_HW_RANDOM_ROCKCHIP=y
 ' >> ./target/linux/rockchip/armv8/config-5.4
 
-#Experimental
-sed -i '/PM_DEVFREQ/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/DEVFREQ_GOV_SIMPLE_ONDEMAND/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/DEVFREQ_GOV_PERFORMANCE/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/DEVFREQ_GOV_POWERSAVE/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/DEVFREQ_GOV_USERSPACE/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/DEVFREQ_GOV_PASSIVE/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/ARM_RK3328_DMC_DEVFREQ/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/ARM_RK3399_DMC_DEVFREQ/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/PM_DEVFREQ_EVENT/d' ./target/linux/rockchip/armv8/config-5.4
-sed -i '/DEVFREQ_EVENT_ROCKCHIP_DFI/d' ./target/linux/rockchip/armv8/config-5.4
-echo '
-CONFIG_PM_DEVFREQ=y
-CONFIG_DEVFREQ_GOV_SIMPLE_ONDEMAND=y
-CONFIG_DEVFREQ_GOV_PERFORMANCE=m
-CONFIG_DEVFREQ_GOV_POWERSAVE=m
-CONFIG_DEVFREQ_GOV_USERSPACE=m
-CONFIG_DEVFREQ_GOV_PASSIVE=m
-CONFIG_ARM_RK3328_DMC_DEVFREQ=y
-CONFIG_ARM_RK3399_DMC_DEVFREQ=y
-CONFIG_PM_DEVFREQ_EVENT=y
-CONFIG_DEVFREQ_EVENT_ROCKCHIP_DFI=y
-CONFIG_EXTCON=y
-' >> ./target/linux/rockchip/armv8/config-5.4
-
 #IRQ
 sed -i '/set_interface_core 20 "eth1"/a\set_interface_core 8 "ff3c0000" "ff3c0000.i2c"' target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
 sed -i '/set_interface_core 20 "eth1"/a\ethtool -C eth0 rx-usecs 1000 rx-frames 25 tx-usecs 100 tx-frames 25' target/linux/rockchip/armv8/base-files/etc/hotplug.d/net/40-net-smp-affinity
 
 #翻译及部分功能优化
 cp -rf ../PATCH/duplicate/addition-trans-zh ./package/lean/lean-translate
+
+#crypto
+echo '
+CONFIG_ARM64_CRYPTO=y
+CONFIG_CRYPTO_SHA256_ARM64=y
+CONFIG_CRYPTO_SHA512_ARM64=y
+CONFIG_CRYPTO_SHA1_ARM64_CE=y
+CONFIG_CRYPTO_SHA2_ARM64_CE=y
+# CONFIG_CRYPTO_SHA512_ARM64_CE is not set
+CONFIG_CRYPTO_SHA3_ARM64=y
+CONFIG_CRYPTO_SM3_ARM64_CE=y
+CONFIG_CRYPTO_SM4_ARM64_CE=y
+CONFIG_CRYPTO_GHASH_ARM64_CE=y
+# CONFIG_CRYPTO_CRCT10DIF_ARM64_CE is not set
+CONFIG_CRYPTO_AES_ARM64=y
+CONFIG_CRYPTO_AES_ARM64_CE=y
+CONFIG_CRYPTO_AES_ARM64_CE_CCM=y
+CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
+CONFIG_CRYPTO_AES_ARM64_NEON_BLK=y
+CONFIG_CRYPTO_CHACHA20_NEON=y
+CONFIG_CRYPTO_POLY1305_NEON=y
+CONFIG_CRYPTO_NHPOLY1305_NEON=y
+CONFIG_CRYPTO_AES_ARM64_BS=y
+' >> ./target/linux/rockchip/armv8/config-5.4
 
 <<'COMMENT'
 #Vermagic
